@@ -74,7 +74,8 @@ class Graph:
                 while True:
                     w = stack.pop()
                     on_stack[w] = False
-                    scc.append(w)
+                    vex = self.vex_list[w - 1]
+                    scc.append(vex.get_address())
                     if w == v:
                         break
                 scc_result.append(scc)
@@ -85,36 +86,126 @@ class Graph:
 
         return scc_result
 
+    def greedy_vertex_cover(self):
+        covered_edges = set()
+        vertex_cover = set()
+        # 创建边的集合，保证每条边只被统计一次
+        edges = set(frozenset({u, v}) for u in self.adjacency_list for v, _ in self.adjacency_list[u] if u < v)
 
-def dijkstra(graph, start, end):
-    distance = {vex: float('inf') for vex in graph.adjacency_list}
-    distance[start] = 0
-    previous = {vex: None for vex in graph.adjacency_list}
-    heap = [(0, start)]
+        id_to_vex = {vex.id: vex for vex in self.vex_list}
+
+        while covered_edges != edges:
+            max_degree_vertex = None
+            max_degree = -1
+
+            # 计算每个顶点的“未覆盖边”度
+            for vertex in self.adjacency_list:
+                current_degree = len({frozenset({vertex, v}) for v, _ in self.adjacency_list[vertex] if
+                                      frozenset({vertex, v}) not in covered_edges})
+                if current_degree > max_degree:
+                    max_degree = current_degree
+                    max_degree_vertex = vertex
+
+            # 如果没有找到合适的顶点，即图中没有更多边需要覆盖
+            if max_degree_vertex is None:
+                break
+
+            vertex_coords = id_to_vex[max_degree_vertex].get_address()
+            vertex_cover.add((vertex_coords['longitude'], vertex_coords['latitude']))
+            # 更新已覆盖的边集
+            covered_edges.update({frozenset({max_degree_vertex, v}) for v, _ in self.adjacency_list[max_degree_vertex]})
+
+        return vertex_cover
+
+
+class DisjointSet:
+    def __init__(self, vertices):
+        self.parent = {v: v for v in vertices}
+        self.rank = {v: 0 for v in vertices}
+
+    def find(self, vertex):
+        if self.parent[vertex] != vertex:
+            self.parent[vertex] = self.find(self.parent[vertex])
+        return self.parent[vertex]
+
+    def union(self, root1, root2):
+        root1_root = self.find(root1)
+        root2_root = self.find(root2)
+        if root1_root != root2_root:
+            if self.rank[root1_root] > self.rank[root2_root]:
+                self.parent[root2_root] = root1_root
+            elif self.rank[root1_root] < self.rank[root2_root]:
+                self.parent[root1_root] = root2_root
+            else:
+                self.parent[root2_root] = root1_root
+                self.rank[root1_root] += 1
+
+
+def kruskal_mst(graph):
+    # 创建一个并查集实例
+    ds = DisjointSet([v.id for v in graph.vex_list])
+
+    # 初始化最小生成树结果列表
+    mst = []
+    total_weight = 0
+
+    # 获取所有边，并按权重排序
+    edges = []
+    for u in graph.adjacency_list:
+        for v, weight in graph.adjacency_list[u]:
+            if u < v:  # 避免重复添加无向图的边
+                edges.append((weight, u, v))
+    edges.sort()
+
+    # 遍历排序后的边集，使用并查集确保无环
+    for weight, u, v in edges:
+        if ds.find(u) != ds.find(v):
+            ds.union(u, v)
+            u_coords = graph.vex_list[u - 1].get_address()
+            v_coords = graph.vex_list[v - 1].get_address()
+            mst.append([
+                 u_coords,
+                 v_coords
+            ])
+            total_weight += weight
+
+    return mst, total_weight
+
+
+def dijkstra(graph, start_id, end_id):
+    distance = {vex.id: float('inf') for vex in graph.vex_list}
+    distance[start_id] = 0
+    previous = {vex.id: None for vex in graph.vex_list}
+    heap = [(0, start_id)]
     visited = set()
 
     while heap:
-        current_dist, current_vex = heapq.heappop(heap)
-        visited.add(current_vex)
+        current_dist, current_vex_id = heapq.heappop(heap)
+        if current_vex_id in visited:
+            continue
+        visited.add(current_vex_id)
 
-        for neighbor, weight in graph.adjacency_list[current_vex]:
-            if neighbor not in visited:
-                new_dist = current_dist + weight
-                if new_dist < distance[neighbor]:
-                    distance[neighbor] = new_dist
-                    previous[neighbor] = current_vex
-                    heapq.heappush(heap, (new_dist, neighbor))
+        for neighbor, weight in graph.adjacency_list[current_vex_id]:
+            if neighbor in visited:
+                continue
+            new_dist = current_dist + weight
+            if new_dist < distance[neighbor]:
+                distance[neighbor] = new_dist
+                previous[neighbor] = current_vex_id
+                heapq.heappush(heap, (new_dist, neighbor))
 
     path = []
-    step = end
+    step = end_id
     if previous[step] is None:
         return float('inf'), []
+
     while step is not None:
-        path.append(step)
+        vertex = next(v for v in graph.vex_list if v.id == step)
+        path.append(vertex.get_address())
         step = previous[step]
     path.reverse()
 
-    return distance[end], path
+    return distance[end_id], path
 
 
 def hamiltonian_path(graph, start, visited, path):

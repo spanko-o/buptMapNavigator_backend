@@ -11,6 +11,22 @@ class Vex(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(255), nullable=True)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'desc': self.desc,
+            'longitude': self.longitude,
+            'latitude': self.latitude,
+            'category': self.category
+        }
+
+    def get_address(self):
+        return {
+            'longitude': self.longitude,
+            'latitude': self.latitude
+        }
+
 
 class Edge(db.Model):
     id = db.Column(db.Integer, primary_key=True)

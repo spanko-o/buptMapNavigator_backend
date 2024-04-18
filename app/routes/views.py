@@ -3,6 +3,7 @@ from app.graph import *
 from . import main
 from app.models import Vex, Edge
 from flask import current_app
+import re
 
 
 def build_graph():
@@ -43,13 +44,19 @@ def test():
     return None
 
 
+@main.route('/vexes', methods=['GET'])
+def get_all_vexes():
+    vexes = Vex.query.all()
+    return jsonify([vex.to_dict() for vex in vexes]), 200
+
+
 @main.route('/shortest_path', methods=['POST'])
 def get_shortest_path():
     data = request.get_json()
     start_id = data.get('start')
     end_id = data.get('end')
     if not start_id or not end_id:
-        return jsonify({'Missing required vexes'}), 400
+        return jsonify('Missing required vexes'), 400
     graph = build_graph()
     shortest_distance, path = dijkstra(graph, int(start_id), int(end_id))
     return jsonify({
@@ -72,12 +79,13 @@ def get_vex_prompt():
     data = request.get_json()
     keyword = data.get('keyword')
     if not keyword:
-        return jsonify({'Missing keyword'}), 400
+        return jsonify('Missing keyword'), 400
     vexes = Vex.query.all()
     results = []
     for vex in vexes:
-        if keyword in vex.name:
-            results.append(vex.name)
+        if keyword in vex.name or keyword in vex.category:
+            result = f"{vex.name}[{vex.category}]"
+            results.append(result)
     return jsonify({
         'vexes': results
     }), 200
@@ -88,15 +96,48 @@ def get_vex_info():
     data = request.get_json()
     keyword = data.get('keyword')
     if not keyword:
-        return jsonify({'Missing keyword'}), 400
-    vex = Vex.query.filter_by(name=keyword).first()
-    if not vex:
-        return jsonify({'This vex does not exist'}), 400
+        return jsonify('Missing keyword'), 400
+    vexes = Vex.query.all()
+    legal_vexes = []
+    if "[" in keyword:
+        parts = re.split(r'[\[\]]+', keyword)
+        parts = [part for part in parts if part]
+        name_part = parts[0]
+        category_part = parts[1]
+        matched_vexes = [vex for vex in vexes if vex.name == name_part and vex.category == category_part]
+        legal_vexes.extend(matched_vexes)
+    else:
+        for vex in vexes:
+            if keyword in vex.name or keyword in vex.category:
+                legal_vexes.append(vex)
+    return jsonify([vex.to_dict() for vex in legal_vexes]), 200
+
+
+@main.route('/scc', methods=['GET'])
+def scc():
+    graph = build_graph()
+    scc_results = graph.tarjan_scc()
     return jsonify({
-        'id': vex.id,
-        'name': vex.name,
-        'description': vex.desc,
-        'longitude': vex.longitude,
-        'latitude': vex.latitude,
-        'category': vex.category
+        'SCC': scc_results
+    }), 200
+
+
+@main.route('/mst', methods=['GET'])
+def mst():
+    graph = build_graph()
+    mst, total_weight = kruskal_mst(graph)
+    total_weight = round(total_weight, 1)
+    return jsonify({
+        "minimum spanning tree": mst
+    })
+
+
+@main.route('/vex_cover', methods=['GET'])
+def vex_cover():
+    graph = build_graph()
+    vertex_cover = graph.greedy_vertex_cover()
+    vertex_cover_list = list(vertex_cover)
+    converted_vex_cover = [{"longitude": lon, "latitude": lat} for lon, lat in vertex_cover_list]
+    return jsonify({
+        "vex_cover": converted_vex_cover
     }), 200
