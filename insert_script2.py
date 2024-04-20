@@ -1,10 +1,13 @@
 """ 此页面作为单独的脚本运行"""
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+import yaml
+with open("./config.yaml", encoding='utf-8') as file:
+    configfile = yaml.safe_load(file)
 
+database = configfile["database"]
 app = Flask(__name__)
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:twrmax1234@localhost:5432/buptGraphicGuide'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{database["user"]}:{database["password"]}@{database["host"]}:{database["port"]}/{database["name"]}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -347,3 +350,4 @@ with app.app_context():
             db.session.add(edge)
 
     db.session.commit()
+    print("insert successfully!!")
