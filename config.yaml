@@ -1,0 +1,13 @@
+secret_key: //6U4sxRSf+gni34fEyKFND4PLsud2Co               # 此处填入随机密钥
+debug: true                                      # 生产环境中应设为 false
+
+# 找到根目录下的config-example.yaml文件，复制一份并重命名为config.yaml
+# 随后将config.yaml中的数据库配置改为自己的数据库的配置即可
+
+# Database Configuration
+database:
+  name: "buptgraphicguide"                 # 替换为您的数据库名
+  user: "postgres"
+  password: "gqdHzXdz+6PAAzXoWoIoQuGvix4Q4iSllel5fR+Eiew=" # 替换为您的数据库密码
+  host: "db"                              # 替换为您的数据库服务地址
+  port: 5432

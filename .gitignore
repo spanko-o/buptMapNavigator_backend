@@ -1,0 +1,88 @@
+# Compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller
+*.spec
+
+# Packages
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+wheels/
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox/
+.nox/
+htmlcov/
+.cache
+.pytest_cache/
+
+# Environments
+.env
+.venv
+.envrc
+.direnv
+.virtualenv
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+.spyderproject
+.spyproject
+.ropeproject
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Flask migrations
+migrations/versions/
+# Note: Be careful with this, make sure you know what you are doing
+# Do not ignore migrations/versions/ if you need to keep track of database schema
+
+# Docker files
+docker-compose.yml
+*.log
+
+venv/
+
+.idea/
+
+__pycache__/
+
+app/__pycache__/
+
+app/routes/__pycache__/
+
+migrations/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Flask migrations
+migrations/versions/
+# Note: Be careful with this, make sure you know what you are doing
+# Do not ignore migrations/versions/ if you need to keep track of database schema
