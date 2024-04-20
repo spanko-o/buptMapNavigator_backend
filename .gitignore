@@ -63,7 +63,6 @@ migrations/versions/
 # Do not ignore migrations/versions/ if you need to keep track of database schema
 
 # Docker files
-docker-compose.yml
 *.log
 
 venv/
